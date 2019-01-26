@@ -1,6 +1,6 @@
 import zulip
 import pprint
-from ss import fn
+import requests
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -34,32 +34,30 @@ class Bot():
             "type": "stream",
             "to": msg.get("display_recipient"),
             "subject": msg.get("subject"),
-            "content": "Invalid command"   # <--- ismei doubt hai
+            "content": "Invalid command"
         }
 
-        fl = 0
-        cmd_code = word[2]
         text_keys = ' '.join(word[3:])
-        if cmd_code == "symptoms": 
-            send_dict["content"] = fn(text_keys)
+        if word[1] == "diagnose" and word[2]=="disease":            
+            re = requests.post(url = "127.0.0.1/8000/api/parse", data = text_keys)
+            import pdb; pdb.set_trace()
+            rezero = re["result"][0]
+            ind = rezero["indications_and_doses"]
+            dos = rezero["dosage_and_administration"]
+            des = rezero["description"]
+            inf = rezero["information_for_patients"]
+            ove = rezero["overdosage"]
+            
+            result = 0#re.text
+            send_dict["content"] = result
             result = self.client.send_message(send_dict)
             pp.pprint(result) 
-        elif cmd_code == "disease": 
-            send_dict["content"] = fn(text_keys)
+        elif word[1] == "describe" and word[2]=="medicine":
+            re = requests.post(url = "http://127.0.0.1/8000/api/prescription", data = text_keys)
+            result = re.text
+            send_dict["content"] = result
             result = self.client.send_message(send_dict)
             pp.pprint(result) 
-        elif cmd_code == "condition": 
-            send_dict["content"] = fn(text_keys)
-            result = self.client.send_message(send_dict)
-            pp.pprint(result) 
-        elif cmd_code == "risk": 
-            send_dict["content"] = fn(text_keys)
-            result = self.client.send_message(send_dict)
-            pp.pprint(result) 
-        elif cmd_code == "information": 
-            send_dict["content"] = fn(text_keys)
-            result = self.client.send_message(send_dict)
-            pp.pprint(result)
         else:
             print("+++Err+++")
             result = self.client.send_message(send_dict)
@@ -70,6 +68,5 @@ def main():
     bot = Bot()
     print("listening")
     bot.client.call_on_each_message(bot.process)
-
 
 main()
